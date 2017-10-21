@@ -33,7 +33,7 @@ app.get('/api/scores', (req, res) => {
       let team_wins = table_text[index_of_team + 1];
       wins[team_name] = team_wins;
       return wins;
-    }, {})
+    }, {});
     res.send(team_wins);
   })
 });
