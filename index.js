@@ -16,11 +16,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get('/scores', (req, res) => {
+app.get('/api/scores', (req, res) => {
   const options = {
     method: 'GET',
     url: 'http://www.foxsports.com/nba/standings',
-  }
+  };
+
   request(options, (err, response) => {
     if (err) {
       return res.sendStatus(502);
@@ -35,6 +36,10 @@ app.get('/scores', (req, res) => {
     }, {})
     res.send(team_wins);
   })
+});
+
+app.get('/*', (req, res) => {
+  res.send('Welcome to NBA standings. Ping \'/api/scores\' to get updated scores.');
 });
 
 function getTeamMap() {
