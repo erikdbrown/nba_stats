@@ -1,0 +1,27 @@
+{
+  "name": "nba_stats",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erikdbrown/nba_stats.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erikdbrown/nba_stats/issues"
+  },
+  "homepage": "https://github.com/erikdbrown/nba_stats#readme",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "cheerio": "^1.0.0-rc.2",
+    "dotenv": "^4.0.0",
+    "express": "^4.16.2",
+    "lodash": "^4.17.4",
+    "request": "^2.83.0"
+  }
+}
