@@ -6,7 +6,7 @@ const body_parser = require('body-parser');
 const request = require('request');
 
 const app = express();
-const port = 1182;
+const PORT = process.env.PORT || 1182;
 
 app.use(body_parser.json());
 app.use((req, res, next) => {
@@ -77,4 +77,4 @@ function getTeamMap() {
   };
 }
 
-app.listen(port, () => console.log(`running on port ${port}`));
+app.listen(PORT, () => console.log(`running on port ${PORT}`));
