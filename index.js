@@ -30,7 +30,12 @@ app.get('/api/scores', (req, res) => {
     let table_text = $('.wisbb_standardTable').text().match(/(\w+)/g);
     let team_wins = _.reduce(getTeamMap(), (wins, team_name, team_code) => {
       let index_of_team = _.indexOf(table_text, team_code);
-      let team_wins = table_text[index_of_team + 1];
+      let index_of_score = index_of_team + 1
+      let team_wins;
+      while (!Number(team_wins)) {
+        team_wins = table_text[index_of_score]
+        index_of_score++;
+      }
       wins[team_name] = team_wins;
       return wins;
     }, {});
