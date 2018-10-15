@@ -24,7 +24,8 @@
     "express": "^4.16.2",
     "lodash": "^4.17.4",
     "pg": "^7.5.0",
-    "request": "^2.83.0"
+    "request": "^2.83.0",
+    "request-promise-native": "^1.0.5"
   },
   "engines": {
     "node": "6.4.0"

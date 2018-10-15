@@ -1,4 +1,5 @@
 'use strict'
+const _ = require('lodash');
 const client = require('./db')
 
 class Model {
@@ -35,8 +36,9 @@ class Manager {
         }
     }
 
-    get_all() {
-        return client.query(`SELECT * FROM ${this.table}`)
+    get_all(columns) {
+        const cols = this._get_columns(columns)
+        return client.query(`SELECT ${cols} FROM ${this.table}`)
             .then(results => results.rows)
     }
 
@@ -133,49 +135,25 @@ class NBATeam extends Model {
             })
     }
 
-    create_teams() {
-        const team_map = {
-            CLE: 'Cavaliers',
-            GS: 'Warriors',
-            BOS: 'Celtics',
-            HOU: 'Rockets',
-            SA: 'Spurs',
-            OKC: 'Thunder',
-            POR: 'Trail Blazers',
-            WSH: 'Wizards',
-            UTA: 'Jazz',
-            MIL: 'Bucks',
-            DET: 'Pistons',
-            MIA: 'Heat',
-            DEN: 'Nuggets',
-            NO: 'Pelicans',
-            TOR: 'Raptors',
-            CHA: 'Hornets',
-            MIN: 'Timberwolves',
-            PHI: '76ers',
-            DAL: 'Mavericks',
-            LAC: 'Clippers',
-            ORL: 'Magic',
-            SAC: 'Kings',
-            CHI: 'Bulls',
-            PHX: 'Suns',
-            IND: 'Pacers',
-            NY: 'Knicks',
-            ATL: 'Hawks',
-            MEM: 'Grizzlies',
-            LAL: 'Lakers',
-            BKN: 'Nets'
-        };
-
-        const promise_chain = Promise.resolve()
-        for (let short_name in team_map) {
-            promise_chain.then(() => {
-                this.objects.get_or_create({
-                    name: team_map[short_name],
-                    short_name: short_name
-                })
-            })
+    increment_scores(team_ids) {
+        if (!team_ids.length) {
+            return Promise.resolve()
         }
+        const wheres = _.map(team_ids, (team_id, index) => `id = $${index + 1}`)
+        const query_string = `UPDATE ${this.objects.table} SET id = id + 1 WHERE ${wheres.join(' OR ')}`
+        return client.query(query_string, team_ids)
+    }
+
+    update_scores(team_scores) {
+        const update_promise = Promise.resolve()
+        _.each(team_scores, (score, team_id) => {
+            const query_string = `UPDATE ${this.objects.table} SET wins = $1 WHERE id = $2`
+            console.log(query_string)
+            update_promise.then(() => {
+                return client.query(query_string, [score, Number(team_id)])
+            })
+        })
+        return update_promise
     }
 }
 
