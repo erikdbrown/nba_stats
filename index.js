@@ -4,6 +4,7 @@ const cheerio = require('cheerio');
 const _ = require('lodash');
 const body_parser = require('body-parser');
 const request = require('request');
+const models = require('./models')
 
 const app = express();
 const PORT = process.env.PORT || 1182;
@@ -19,7 +20,7 @@ app.use((req, res, next) => {
 app.get('/api/scores', (req, res) => {
   const options = {
     method: 'GET',
-    url: 'http://www.foxsports.com/nba/standings',
+    url: 'https://www.foxsports.com/nba/standings?season=2018&seasonType=1&grouping=1&advanced=0',
   };
 
   request(options, (err, response) => {
@@ -28,18 +29,24 @@ app.get('/api/scores', (req, res) => {
     }
     const $ = cheerio.load(response.body);
     let table_text = $('.wisbb_standardTable').text().match(/(\w+)/g);
-    let team_wins = _.reduce(getTeamMap(), (wins, team_name, team_code) => {
-      let index_of_team = _.indexOf(table_text, team_code);
-      let index_of_score = index_of_team + 1
-      let team_wins;
-      while (!Number(team_wins)) {
-        team_wins = table_text[index_of_score]
-        index_of_score++;
-      }
-      wins[team_name] = team_wins;
-      return wins;
-    }, {});
-    res.send(team_wins);
+    return models.NBATeam.objects.get_all()
+        .then(teams => {
+          let team_wins = _.reduce(teams, (wins, team) => {
+            let index_of_team = _.indexOf(table_text, team.short_name);
+            let index_of_score = index_of_team + 1
+            let team_wins;
+            while (isNaN(Number(team_wins))) {
+              team_wins = table_text[index_of_score]
+              index_of_score++;
+            }
+            wins[team.name] = team_wins;
+            return wins;
+          }, {});
+          res.send(team_wins);
+        })
+        .catch(err => {
+          return err
+        })
   })
 });
 
