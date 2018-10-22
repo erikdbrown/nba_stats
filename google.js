@@ -7,7 +7,7 @@ const readline = require('readline-promise');
 const {google} = require('googleapis');
 
 
-class GoogleAuth {
+class GoogleAuthAPI {
   constructor() {
     this.client = null
   }
@@ -93,5 +93,5 @@ class GoogleAuth {
 }
 
 module.exports = {
-  GoogleAuth,
+  GoogleAuthAPI,
 };

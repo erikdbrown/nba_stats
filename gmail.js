@@ -1,9 +1,9 @@
 const {google} = require('googleapis');
 const {Base64} = require('js-base64');
 
-const {GoogleAuth} = require('./google');
+const {GoogleAuthAPI} = require('./google');
 
-class Gmail extends GoogleAuth {
+class GmailAPI extends GoogleAuthAPI {
   constructor(GoogleAuth) {
     super();
     this.api_name = 'gmail';
@@ -37,5 +37,5 @@ class Gmail extends GoogleAuth {
 }
 
 module.exports = {
-  Gmail: new Gmail()
+  GmailAPI: new GmailAPI()
 };
