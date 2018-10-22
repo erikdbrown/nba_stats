@@ -5,6 +5,7 @@ fs.writeFile = util.promisify(fs.writeFile);
 
 const readline = require('readline-promise');
 const {google} = require('googleapis');
+const credentials = require('./credentials');
 
 
 class GoogleAuthAPI {
@@ -30,9 +31,7 @@ class GoogleAuthAPI {
   }
 
   getCredentials() {
-    return fs.readFile('credentials.json')
-      .then(content => JSON.parse(content)[this.api_name])
-      .catch(err => console.log(`Error loading ${this.api_name} client secret file:, ${err}`));
+    return credentials[this.api_name]
   }
   
   authorize() {
