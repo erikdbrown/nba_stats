@@ -110,9 +110,15 @@ class Player extends Model {
     }
 }
 
-class Win extends Model {
+class Week extends Model {
     constructor() {
-        super('wins')
+        super('weeks')
+    }
+}
+
+class Standing extends Model {
+    constructor() {
+        super('standings')
     }
 }
 
@@ -158,8 +164,9 @@ class NBATeam extends Model {
 }
 
 module.exports = {
+    NBATeam: new NBATeam(),
     PoolTeam: new PoolTeam(),
     Player: new Player(),
-    NBATeam: new NBATeam(),
-    Win: new Win(),
+    Standing: new Standing(),
+    Week: new Week(),
 }
