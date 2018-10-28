@@ -95,6 +95,27 @@ class Manager {
         const query_string = `UPDATE ${this.table} SET ${sets.join(', ')} WHERE ${wheres.join(' AND ')}`
         return client.query(query_string, values)
     }
+
+    delete(params) {
+        const sets = [];
+        const wheres = [];
+        const values = [];
+        for (let key in updates) {
+            values.push(updates[key]);
+            sets.push(`${key} = $${values.length}`);
+        }
+        for (let key in params) {
+            values.push(params[key]);
+            wheres.push(`${key} = $${values.length}`);
+        }
+        const query_string = `DELETE FROM ${this.table} WHERE ${wheres.join(' AND ')}`;
+        return client.query(query_string, values);
+    }
+
+    delete_all() {
+        const query_string = `DELETE FROM ${this.table}`;
+        return client.query(query_string);
+    }
 }
 
 
