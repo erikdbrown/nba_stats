@@ -36,9 +36,13 @@ class Manager {
         }
     }
 
-    get_all(columns) {
-        const cols = this._get_columns(columns)
-        return client.query(`SELECT ${cols} FROM ${this.table}`)
+    get_all(columns, sort_by='') {
+        const cols = this._get_columns(columns);
+        let query_string = `SELECT ${cols} FROM ${this.table}`;
+        if (sort_by.length) {
+            query_string += ` ORDER BY ${sort_by}`;
+        }
+        return client.query(query_string)
             .then(results => results.rows)
     }
 
@@ -147,6 +151,7 @@ class Standing extends Model {
 class NBATeam extends Model {
     constructor() {
         super('nba_teams')
+        this.objects.get_team_scores = this.get_team_scores
     }
 
     assign_to(nba_team_name, pool_team_name) {
@@ -162,13 +167,33 @@ class NBATeam extends Model {
             })
     }
 
+    get_team_scores() {
+        const query_string = `
+            SELECT
+                nba_teams.draft_round,
+                nba_teams.wins,
+                nba_teams.name AS team_name,
+                pool_teams.name AS pool_name
+            FROM
+                nba_teams
+            INNER JOIN pool_teams ON pool_teams.id = nba_teams.pool_team;
+        `;
+        return client.query(query_string).then(response => response.rows)
+    }
+
     increment_scores(team_ids) {
         if (!team_ids.length) {
             return Promise.resolve()
         }
         const wheres = _.map(team_ids, (team_id, index) => `id = $${index + 1}`)
-        const query_string = `UPDATE ${this.objects.table} SET id = id + 1 WHERE ${wheres.join(' OR ')}`
+        const query_string = `UPDATE ${this.objects.table} SET wins = wins + 1 WHERE ${wheres.join(' OR ')}`
         return client.query(query_string, team_ids)
+    }
+
+    get_all(columns) {
+        const cols = this._get_columns(columns)
+        return client.query(`SELECT ${cols} FROM ${this.table} ORDER BY wins DESC`)
+            .then(results => results.rows)
     }
 
     update_scores(team_scores) {

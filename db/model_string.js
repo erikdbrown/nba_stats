@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS nba_teams (
     name VARCHAR(40) NOT NULL,
     short_name VARCHAR(5) NOT NULL,
     wins INTEGER DEFAULT 0,
+    draft_round INTEGER,
     pool_team INTEGER,
     FOREIGN KEY (pool_team) REFERENCES pool_teams (id)
 );

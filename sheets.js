@@ -70,7 +70,7 @@ class SheetsAPI extends GoogleAuthAPI {
           spreadsheetId: sheet_id,
           range: range,
           valueInputOption: 'USER_ENTERED',
-          resource: body
+          resource: body,
         }
         return sheets.spreadsheets.values.update(params)
       })
