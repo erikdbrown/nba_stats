@@ -22,10 +22,17 @@ CREATE TABLE IF NOT EXISTS nba_teams (
     FOREIGN KEY (pool_team) REFERENCES pool_teams (id)
 );
 
-CREATE TABLE IF NOT EXISTS wins (
+CREATE TABLE IF NOT EXISTS weeks (
+    id SERIAL PRIMARY KEY,
+    date DATE
+);
+
+CREATE TABLE IF NOT EXISTS standings (
     id SERIAL PRIMARY KEY,
     nba_team INTEGER,
-    date DATE,
-    FOREIGN KEY (nba_team) REFERENCES nba_teams (id)  
+    week INTEGER,
+    place INTEGER,
+    FOREIGN KEY (nba_team) REFERENCES nba_teams (id),
+    FOREIGN KEY (week) REFERENCES weeks (id)
 );
 `

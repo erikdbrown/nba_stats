@@ -1,12 +1,14 @@
 const { Pool } = require('pg')
 
-const pool = new Pool({
-  // user: 'dbuser',
-  connectionString: process.env.DATABASE_URL,
-  // database: 'mydb',
-  // password: 'secretpassword',
-  // port: 3211,
-})
+let config;
+if (process.env.DATABASE_URL) {
+  config = {
+    connectionString: process.env.DATABASE_URL,
+  };
+}
+
+const pool = new Pool(config)
+
 pool.query(require('./model_string'), (error, resposne) => {
     if (error) {
         console.log(error)
@@ -14,7 +16,6 @@ pool.query(require('./model_string'), (error, resposne) => {
         console.log('created tables')
     }
 })
-
 
 module.exports = {
   query: (text, params, callback) => {

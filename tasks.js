@@ -94,3 +94,8 @@ function create_teams() {
         })
     }
 }
+
+module.exports = {
+    update_scores,
+    create_teams
+}

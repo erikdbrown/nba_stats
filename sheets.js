@@ -58,10 +58,6 @@ class SheetsAPI extends GoogleAuthAPI {
   }
 
   update_sheet(sheet_id, range, data=[]) {
-    console.log('sheet_id: ', sheet_id)
-    console.log('range: ', range)
-    console.log('data: ', data)
-
     return this.get_client()
       .then(sheets => {
         sheets.spreadsheets.values.update = util.promisify(sheets.spreadsheets.values.update);
