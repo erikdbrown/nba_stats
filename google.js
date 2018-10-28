@@ -31,7 +31,7 @@ class GoogleAuthAPI {
   }
 
   getCredentials() {
-    return credentials[this.api_name]
+    return JSON.parse(credentials[this.api_name]);
   }
   
   authorize() {
