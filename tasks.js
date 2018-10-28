@@ -6,7 +6,7 @@ const request = require('request-promise-native');
 function update_scores() {
     const options = {
         method: 'GET',
-        url: 'https://www.foxsports.com/nba/standings?season=2017&seasonType=1&grouping=1&advanced=0',
+        url: 'https://www.foxsports.com/nba/standings?season=2018&seasonType=1&grouping=1&advanced=0',
       };
 
       return request(options)
