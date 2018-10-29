@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+
+require('dotenv').config();
 const _ = require('lodash');
 const cheerio = require('cheerio');
 const models = require('./models')
