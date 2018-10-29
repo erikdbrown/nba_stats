@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const fs = require('fs');
 const util = require('util');
 fs.readFile = util.promisify(fs.readFile);
@@ -33,6 +34,17 @@ class GoogleAuthAPI {
   getCredentials() {
     return JSON.parse(credentials[this.api_name]);
   }
+
+  refreshToken() {
+    return this.oAuth2Client.refreshAccessToken()
+        .then(response => {
+          const token = response.credentials
+          return Promise.all([token, fs.writeFile(this.token_path, JSON.stringify(token))])
+        })
+        .then(_.spread((token, results) => {
+          return token;
+        }))
+  }
   
   authorize() {
     return Promise.resolve(this.oAuth2Client)
@@ -48,7 +60,14 @@ class GoogleAuthAPI {
         return fs.readFile(this.token_path);
       })
       .then(token => {
-        this.oAuth2Client.setCredentials(JSON.parse(token));
+        parsed_token = JSON.parse(token)
+        if (Date.now() > parsed_token.expiry_date) {
+          return this.refreshToken();
+        }
+        return parsed_token;
+      })
+      .then(token => {
+        this.oAuth2Client.setCredentials(token);
         return this.oAuth2Client;
       })
       .catch(err => this.getNewToken());
