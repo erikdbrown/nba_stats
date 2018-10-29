@@ -7,6 +7,7 @@ fs.writeFile = util.promisify(fs.writeFile);
 const readline = require('readline-promise');
 const {google} = require('googleapis');
 const credentials = require('./credentials');
+const client = require('./db');
 
 
 class GoogleAuthAPI {
@@ -39,7 +40,11 @@ class GoogleAuthAPI {
     return this.oAuth2Client.refreshAccessToken()
         .then(response => {
           const token = response.credentials
-          return Promise.all([token, fs.writeFile(this.token_path, JSON.stringify(token))])
+          query_string = `UPDATE tokens SET token = $1 WHERE api_name = ${this.api_name};`
+          return Promise.all([
+            token,
+            client.query(query_string, token)
+          ])
         })
         .then(_.spread((token, results) => {
           return token;
@@ -57,10 +62,15 @@ class GoogleAuthAPI {
       .then(credentials => {
         const {client_secret, client_id, redirect_uris} = credentials.installed;
         this.oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-        return fs.readFile(this.token_path);
+        const query_string = `SELECT token FROM tokens WHERE api_name = $1`
+        return client.query(query_string, [this.api_name])
       })
-      .then(token => {
-        parsed_token = JSON.parse(token)
+      .then(results => {
+        const tokens = results.rows;
+        if (tokens && !tokens.length) {
+          return this.getNewToken();
+        }
+        const parsed_token = JSON.parse(tokens[0].token)
         if (Date.now() > parsed_token.expiry_date) {
           return this.refreshToken();
         }
@@ -70,7 +80,7 @@ class GoogleAuthAPI {
         this.oAuth2Client.setCredentials(token);
         return this.oAuth2Client;
       })
-      .catch(err => this.getNewToken());
+      .catch(err => console.log(err));
   }
 
   getNewToken() {
@@ -104,8 +114,13 @@ class GoogleAuthAPI {
     })
     .then(token => {
         this.oAuth2Client.setCredentials(token);
-        return fs.writeFile(this.token_path, JSON.stringify(token));
+        const query_string = `INSERT INTO tokens (api_name, token, refresh_token) VALUES ($1, $2, $3)`;
+        return Promise.all([
+          token,
+          client.query(query_string, [this.api_name, JSON.stringify(token), token.refresh_token])
+        ])
     })
+    .then(_.spread((token, results) => token))
     .catch(err => console.log(`There was an error generating a new token: ${err}`));
   }
 }

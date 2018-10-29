@@ -36,4 +36,11 @@ CREATE TABLE IF NOT EXISTS standings (
     FOREIGN KEY (nba_team) REFERENCES nba_teams (id),
     FOREIGN KEY (week) REFERENCES weeks (id)
 );
+
+CREATE TABLE IF NOT EXISTS tokens (
+    id SERIAL PRIMARY KEY,
+    api_name VARCHAR(10) NOT NULL,
+    refresh_token VARCHAR(200),
+    token TEXT
+);
 `
