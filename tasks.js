@@ -114,8 +114,7 @@ function sendLeadChangeEmail(lead_change) {
 
     return models.Player.objects.get_all(['email'])
         .then(rows => {
-            email_addresses = _.map(rows, 'email')
-            email_addresses = ['erikdbrown@gmail.com']
+            const email_addresses = _.map(rows, 'email')
             return GmailAPI.sendEmail(email_addresses, subject, email_html);
         })
 }
