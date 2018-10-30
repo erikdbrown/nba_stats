@@ -43,6 +43,7 @@ function update_spreadsheet_scores() {
         process.exit();
       })
       .catch(err => {
+        console.log(err)
         email_error(err);
         process.exit();
       })
@@ -88,6 +89,7 @@ function getLeadChange(old_leaders, old_totals, new_leaders, new_totals) {
       return incumbents;
     }, []);
 
+    console.log({added: added_leaders, incumbents: incumbent_leaders, fallen: fallen_leaders, wins: new_win_total})
     return {added: added_leaders, incumbents: incumbent_leaders, fallen: fallen_leaders, wins: new_win_total};
   }
 
@@ -124,6 +126,7 @@ function sendLeadChangeEmail(lead_change) {
     return models.Player.objects.get_all(['email'])
         .then(rows => {
             const email_addresses = _.map(rows, 'email')
+            console.log(email_addresses)
             return GmailAPI.sendEmail(email_addresses, subject, email_html);
         })
 }
