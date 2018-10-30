@@ -33,22 +33,26 @@ class GoogleAuthAPI {
   }
 
   getCredentials() {
-    return JSON.parse(credentials[this.api_name]);
+    return JSON.parse(credentials[this.api_name]).installed
   }
 
-  refreshToken() {
-    return this.oAuth2Client.refreshAccessToken()
-        .then(response => {
-          const token = response.credentials
-          query_string = `UPDATE tokens SET token = $1 WHERE api_name = ${this.api_name};`
-          return Promise.all([
-            token,
-            client.query(query_string, token)
-          ])
-        })
-        .then(_.spread((token, results) => {
-          return token;
-        }))
+  getTokenCredentials() {
+    const query_string = `SELECT token FROM tokens WHERE api_name = $1`;
+    return client.query(query_string, [this.api_name])
+      .then(response => {
+        const tokens = response.rows;
+        if (tokens && !tokens.length) {
+          return this.getNewToken();
+        }
+        const parsed_token = JSON.parse(tokens[0].token);
+        if (!parsed_token.refresh_token && tokens[0].refresh_token) {
+          parsed_token['refresh_token'] = tokens[0].refresh_token;
+        }
+        return parsed_token;
+      })
+      .then(token => {
+        return _.assign(token, this.getCredentials());
+      })
   }
   
   authorize() {
@@ -57,27 +61,12 @@ class GoogleAuthAPI {
         if (client) {
           return this.oAuth2Client;
         }
-        return this.getCredentials();
+        return this.getTokenCredentials();
       })
       .then(credentials => {
-        const {client_secret, client_id, redirect_uris} = credentials.installed;
+        const {client_secret, client_id, redirect_uris} = credentials;
         this.oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-        const query_string = `SELECT token FROM tokens WHERE api_name = $1`
-        return client.query(query_string, [this.api_name])
-      })
-      .then(results => {
-        const tokens = results.rows;
-        if (tokens && !tokens.length) {
-          return this.getNewToken();
-        }
-        const parsed_token = JSON.parse(tokens[0].token)
-        if (Date.now() > parsed_token.expiry_date) {
-          return this.refreshToken();
-        }
-        return parsed_token;
-      })
-      .then(token => {
-        this.oAuth2Client.setCredentials(token);
+        this.oAuth2Client.setCredentials(credentials);
         return this.oAuth2Client;
       })
       .catch(err => console.log(err));
@@ -93,13 +82,9 @@ class GoogleAuthAPI {
       if (oAuth2Client) {
         return
       }
-      return this.getCredentials()
-        .then(credentials => {
-          const {client_secret, client_id, redirect_uris} = credentials.installed;
-          this.oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
-        })
-      })
-    .then(() => {
+      const credentials = this.getCredentials();
+      const {client_secret, client_id, redirect_uris} = credentials;
+      this.oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
       const authUrl = this.oAuth2Client.generateAuthUrl({
         access_type: 'offline',
         scope: this.scopes,
