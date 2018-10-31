@@ -1,5 +1,6 @@
 const {google} = require('googleapis');
 const {Base64} = require('js-base64');
+const util = require('util');
 
 const {GoogleAuthAPI} = require('./google');
 
@@ -37,7 +38,8 @@ class GmailAPI extends GoogleAuthAPI {
   sendEmail(to_addresses, subject, html_message) {
     return this.get_client()
       .then(gmail => {
-        gmail.users.messages.send({
+        gmail.users.messages.send = util.promisify(gmail.users.messages.send);
+        return gmail.users.messages.send({
           userId: 'me',
           resource: {
             raw: this.makeBody(

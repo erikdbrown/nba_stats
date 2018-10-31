@@ -76,10 +76,7 @@ class SheetsAPI extends GoogleAuthAPI {
       })
       .then(response => {
         return response.data
-      })
-      .catch(err => {
-        console.log('There an error updating the sheet :', err)
-      })
+      });
   }
 
   get_sheet_details(sheet_id) {
@@ -90,7 +87,6 @@ class SheetsAPI extends GoogleAuthAPI {
           spreadsheetId: sheet_id
         });
       })
-      .catch(err => console.log(`There was an error retrieving spreadsheet: ${err}`));
   }
 
   get_sheet_values(sheet_id, range) {
@@ -105,7 +101,6 @@ class SheetsAPI extends GoogleAuthAPI {
       .then(response => {
         return response.data.values
       })
-      .catch(err => console.log(`There was an error retrieving spreadsheet: ${err}`));
   }
 }
 

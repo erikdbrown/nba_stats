@@ -69,12 +69,13 @@ class GoogleAuthAPI {
         this.oAuth2Client.setCredentials(credentials);
         return this.oAuth2Client.getAccessTokenAsync()
       })
-      .then(this.saveToken)
+      .then(() => this.saveToken)
       .then(() => this.oAuth2Client)
       .catch(err => console.log(err));
   }
 
-  saveToken(token) {
+  saveToken(auth_response) {
+    const token = auth_response.res.data
     const refresh_token = token.refresh_token;
     const stringified_token = JSON.stringify(token);
     let query_string;
