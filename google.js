@@ -67,9 +67,27 @@ class GoogleAuthAPI {
         const {client_secret, client_id, redirect_uris} = credentials;
         this.oAuth2Client = new google.auth.OAuth2(client_id, client_secret, redirect_uris[0]);
         this.oAuth2Client.setCredentials(credentials);
-        return this.oAuth2Client;
+        return this.oAuth2Client.getAccessTokenAsync()
       })
+      .then(this.saveToken)
+      .then(() => this.oAuth2Client)
       .catch(err => console.log(err));
+  }
+
+  saveToken(token) {
+    const refresh_token = token.refresh_token;
+    const stringified_token = JSON.stringify(token);
+    let query_string;
+    let values;
+    if (refresh_token.length) {
+      query_string = `UPDATE tokens SET (refresh_token, token) VALUES ($1, $2) WHERE api_name = $3`;
+      values = [refresh_token, stringified_token, this.api_name];
+    } else {
+      query_string = `UPDATE tokens SET (token) VALUES ($1) WHERE api_name = $2`;
+      values = [stringified_token, this.api_name];
+    }
+
+    return client.query(query_string, values);
   }
 
   getNewToken() {
