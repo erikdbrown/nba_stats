@@ -111,6 +111,25 @@ function getHasOrHave(collection) {
   return collection.length > 1 ? ' have ' : ' has ';
 }
 
+function getInsult(lead_change) {
+    const leaders = lead_change.incumbents.concat(lead_change.added);
+    let verb = 'is'
+    if (leaders.length > 1) {
+        verb = 'are'
+    }
+    const template = `as <adjective> as <article target=adj1> <adjective min=1 max=3 id=adj1> <amount> of <adjective min=1 max=3> <animal> <animal_part>`
+
+    const url = `https://insult.mattbas.org/api/en/insult.json?template=${template}`
+
+    return request(url).then(response => {
+      const insult = `
+        <p>And now a random insult:</p>
+        <p>${getNameString(leaders)} ${verb} ${JSON.parse(response).insult}</p>
+      `;
+      return insult;
+    })
+}
+
 function sendLeadChangeEmail(lead_change) {
     if (!lead_change) {
         return
@@ -121,14 +140,16 @@ function sendLeadChangeEmail(lead_change) {
     var greeting = '<p>Good morning,</p>'
     var signoff = '<p>All the best,</p><p>Erik</p>'
     var ps = '<p>PS: This email is auto-generated. If you don\'t want to receive it, just email me back.'
-    var email_html = greeting + body + link_to_spreadsheet + signoff + ps;
 
-    return models.Player.objects.get_all(['email'])
-        .then(rows => {
-            const email_addresses = _.map(rows, 'email')
-            console.log(email_addresses)
-            return GmailAPI.sendEmail(email_addresses, subject, email_html);
-        })
+    return Promise.all([
+        getInsult(lead_change),
+        models.Player.objects.get_all(['email'])
+    ]).then(_.spread((insult_html, player_rows) => {
+        const email_html = greeting + body + insult_html + link_to_spreadsheet + signoff + ps;
+        const email_addresses = _.map(player_rows, 'email')
+        console.log(email_addresses)
+        return GmailAPI.sendEmail(email_addresses, subject, email_html);
+    }))
 }
 
 function getEmailParagraphs(lead_change) {
