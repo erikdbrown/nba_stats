@@ -145,7 +145,7 @@ function sendLeadChangeEmail(lead_change) {
         getInsult(lead_change),
         models.Player.objects.get_all(['email'])
     ]).then(_.spread((insult_html, player_rows) => {
-        const email_html = greeting + body + insult_html + link_to_spreadsheet + signoff + ps;
+        const email_html = greeting + body + link_to_spreadsheet + signoff + ps;
         const email_addresses = _.map(player_rows, 'email')
         console.log(email_addresses)
         return GmailAPI.sendEmail(email_addresses, subject, email_html);
