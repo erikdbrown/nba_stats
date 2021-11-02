@@ -212,48 +212,51 @@ function update_timestamp(spreadsheet) {
     return spreadsheet.update('UpdatedAt', [[time_string]])
 }
 
-function update_db_scores() {
-    const options = {
-        method: 'GET',
-        url: 'https://www.foxsports.com/nba/standings?season=2018&seasonType=1&grouping=1&advanced=0',
-      };
+function parse_score_source() {
+	const options = {
+    	method: 'GET',
+    	url: 'https://www.foxsports.com/nba/standings',
+  	};
 
-      return request(options)
-        .then(response => {
-            const $ = cheerio.load(response);
-            let table_text = $('.wisbb_standardTable').text().match(/(\w+)/g);
-            return Promise.all([
-                table_text,
-                models.NBATeam.objects.get_all()
-            ]);
-        })
-        .then(_.spread((table_text, teams) => {
-            const winning_ids = _.reduce(teams, (winning_team_ids, team) => {
-                let index_of_team = _.indexOf(table_text, team.short_name);
-                let index_of_score = index_of_team + 1
-                let team_wins = NaN;
-                while (isNaN(Number(team_wins))) {
-                    team_wins = table_text[index_of_score]
-                    index_of_score++;
+  	return request(options).then(response => {
+  		const $ = cheerio.load(response);
+  		return $('.data-table').text().match(/(\w+)/g);
+  	});
+}
+
+function update_db_scores() {
+	return Promise.all([
+		parse_score_source(),
+		models.NBATeam.objects.get_all(),
+	])
+    .then(_.spread((table_text, teams) => {
+        const winning_ids = _.reduce(teams, (winning_team_ids, team) => {
+            let index_of_team = _.indexOf(table_text, team.name);
+            let index_of_score = index_of_team + 1
+            let team_wins = NaN;
+            while (isNaN(Number(team_wins))) {
+                team_wins = table_text[index_of_score]
+                index_of_score++;
+            }
+            console.log(team.name, index_of_team, index_of_score, table_text[index_of_score])
+            if (Number(team_wins) - team.wins !== 0) {
+                if (Number(team_wins) - team.wins === 1) {
+                    winning_team_ids.increments.push(team.id)
+                } else {
+                    winning_team_ids.updates[team.id] = Number(team_wins)
                 }
-                if (Number(team_wins) - team.wins !== 0) {
-                    if (Number(team_wins) - team.wins === 1) {
-                        winning_team_ids.increments.push(team.id)
-                    } else {
-                        winning_team_ids.updates[team.id] = Number(team_wins)
-                    }
-                }
-                return winning_team_ids;
-            }, {increments: [], updates: {}});
-            return Promise.all([
-                models.NBATeam.increment_scores(winning_ids.increments),
-                models.NBATeam.update_scores(winning_ids.updates)
-            ])
-        }))
-        .then(result => {
-            console.log('Finished updating scores')
-        })
-        .catch(email_error)
+            }
+            return winning_team_ids;
+        }, {increments: [], updates: {}});
+        return Promise.all([
+            models.NBATeam.increment_scores(winning_ids.increments),
+            models.NBATeam.update_scores(winning_ids.updates)
+        ])
+    }))
+    .then(result => {
+        console.log('Finished updating scores')
+    })
+    .catch(email_error)
 }
 
 function create_teams() {
@@ -276,7 +279,7 @@ function create_teams() {
         GSW: 'Warriors',
         DEN: 'Nuggets',
         NOP: 'Pelicans',
-        POR: 'Trail Blazers',
+        POR: 'Blazers',
         MEM: 'Grizzlies',
         SAS: 'Spurs',
         UTA: 'Jazz',
@@ -304,5 +307,6 @@ function create_teams() {
 module.exports = {
     create_teams,
     update_db_scores,
+    parse_score_source,
     update_spreadsheet_scores,
 }
