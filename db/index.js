@@ -3,7 +3,8 @@ const { Pool } = require('pg')
 let config;
 if (process.env.DATABASE_URL) {
   config = {
-    connectionString: process.env.DATABASE_URL + '?sslmode=require',
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
   };
 }
 
